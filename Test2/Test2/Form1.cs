@@ -10,14 +10,15 @@ using System.Windows.Forms;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Reflection;
+using System.Net;
 
 namespace Test2
 {
     public partial class MainForm : Form
     {
-        private List<List<PointF>> graphs;
-        private bool isAxesDrawn;
-        private float scale;
+        private List<List<PointF>> graphs; // Массив точек
+        private bool isAxesDrawn; //Нарисована ли ось абцис
+        private float scale; //Величина графика
 
         private int selectedGraphIndex; // Индекс выбранного графика
         private Color selectedGraphColor; // Цвет выбранного графика
@@ -37,11 +38,9 @@ namespace Test2
             panel1.Focus();
             panel1.PreviewKeyDown += panel1_PreviewKeyDown; // Добавляем обработчик события KeyDown
         }
-
         private void MainForm_Load(object sender, EventArgs e) { 
 
         }
-
         private void Panel1_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -93,7 +92,6 @@ namespace Test2
 
             return false;
         }
-
         private void openFileButton_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -116,7 +114,6 @@ namespace Test2
                 }
             }
         }
-
         private List<PointF> ReadPointsFromFile(string fileName)
         {
             List<PointF> points = new List<PointF>();
@@ -137,7 +134,6 @@ namespace Test2
 
             return points;
         }
-
         private void DrawGraph(List<PointF> points)
         {
             using (Graphics g = panel1.CreateGraphics())
@@ -149,15 +145,14 @@ namespace Test2
                 {
                     pen.Color = selectedGraphColor; // Используем выбранный цвет для выбранного графика
                 }
-
                 PointF[] scaledPoints = ScalePoints(points);
-                g.DrawLines(pen, scaledPoints); 
+                g.DrawLines(pen, scaledPoints);
             }
         }
-
         private void RedrawGraphs()
         {
             panel1.Refresh(); // Очищаем панель для перерисовки графиков
+            panel1.Controls.Clear();
 
             // Перерисовываем все графики
             foreach (List<PointF> points in graphs)
@@ -170,42 +165,20 @@ namespace Test2
                 DrawAxes();
             }
         }
-
         private PointF[] ScalePoints(List<PointF> points)
         {
-            float minX = float.MaxValue;
-            float maxX = float.MinValue;
-            float minY = float.MaxValue;
-            float maxY = float.MinValue;
-
-            // Находим минимальные и максимальные значения по осям
-            foreach (PointF point in points)
-            {
-                if (point.X < minX)
-                    minX = point.X;
-                if (point.X > maxX)
-                    maxX = point.X;
-                if (point.Y < minY)
-                    minY = point.Y;
-                if (point.Y > maxY)
-                    maxY = point.Y;
-            }
-
-            // Масштабируем точки относительно размера панели
             PointF[] scaledPoints = new PointF[points.Count];
-            float scaleX = panel1.Width / (maxX - minX) / scale;
-            float scaleY = panel1.ClientSize.Height / (maxY - minY) / scale;
-
+            float scaleX = panel1.Width / (scale * 10);
+            float scaleY = panel1.ClientSize.Height / (scale * 10);
+            float xRes, yRes;
             for (int i = 0; i < points.Count; i++)
             {
-                float x = points[i].X;
-                float y = points[i].Y;
-                float scaledX = (x - minX) * scaleX;
-                float scaledY = panel1.Height - 35 - (y - minY) * scaleY; // инвертируем Y-координату для правильного отображения
-                /*points[i] = new PointF(scaledX, scaledY);*/ // Обновляем координаты точек
+                xRes = points[i].X;
+                yRes = points[i].Y;
+                float scaledX = 20 + xRes * scaleX;
+                float scaledY = panel1.Height - 20 - yRes * scaleY;
                 scaledPoints[i] = new PointF(scaledX, scaledY);
             }
-
             return scaledPoints;
         }
         private void DrawAxes()
@@ -249,7 +222,6 @@ namespace Test2
                 g.DrawString(xAxisLabel, Font, brush, new PointF(panel1.Width - axisPadding - xAxisLabelSize.Width - 5, xAxisY - xAxisLabelSize.Height - 5));
             }
         }
-
         private void MainForm_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
             switch (e.KeyCode)
@@ -262,23 +234,9 @@ namespace Test2
                     break;
             }
         }
-
-        //private void MoveGraph(List<PointF> graph, float deltaX, float deltaY)
-        //{
-        //    for (int i = 0; i < graph.Count; i++)
-        //    {
-        //        PointF point = graph[i];
-        //        point.X += deltaX;
-        //        point.Y += deltaY;
-        //        graph[i] = point;
-        //    }
-        //}
-
         private List<PointF> MoveGraph(List<PointF> points, int dx, int dy)
         {
             List<PointF> movedPoints = new List<PointF>();
-            //float dx = mouseLocation.X / (100 * scale);
-            //float dy = mouseLocation.Y / (100 * scale);
 
             foreach (PointF point in points)
             {
@@ -288,7 +246,6 @@ namespace Test2
 
             return movedPoints;
         }
-
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (isGraphSelected)
@@ -298,10 +255,10 @@ namespace Test2
                 switch (e.KeyCode)
                 {
                     case Keys.Left:
-                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], -10, 0);
+                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], -5, 0);
                         break;
                     case Keys.Right:
-                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 10, 0);
+                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 5, 0);
                         break;
                     case Keys.Up:
                         graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 0, -10);
@@ -320,7 +277,6 @@ namespace Test2
                 RedrawGraphs();
             }
         }
-
         private void MoveSize(List<PointF> graph, bool x)
         {
             if (x)
@@ -334,12 +290,10 @@ namespace Test2
                 ScalePoints(graph);
             }
         }
-
         private void panel1_MouseClick_1(object sender, MouseEventArgs e)
         {
             panel1.Focus();
         }
-
         private void panel1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
             switch (e.KeyCode)
@@ -354,7 +308,6 @@ namespace Test2
                     break;
             }
         }
-
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
