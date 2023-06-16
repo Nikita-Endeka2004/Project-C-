@@ -293,10 +293,10 @@ namespace Test2
                 switch (e.KeyCode)
                 {
                     case Keys.Left:
-                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], -5, 0);
+                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 5, 0);
                         break;
                     case Keys.Right:
-                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 5, 0);
+                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], -5, 0);
                         break;
                     case Keys.Up:
                         graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 0, 10);
