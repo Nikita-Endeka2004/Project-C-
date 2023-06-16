@@ -299,10 +299,10 @@ namespace Test2
                         graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 5, 0);
                         break;
                     case Keys.Up:
-                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 0, -10);
+                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 0, 10);
                         break;
                     case Keys.Down:
-                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 0, 10);
+                        graphs[selectedGraphIndex] = MoveGraph(graphs[selectedGraphIndex], 0, -10);
                         break;
                     case Keys.W:
                         MoveSize(selectedGraph, true);
