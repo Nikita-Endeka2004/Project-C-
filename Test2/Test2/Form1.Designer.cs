@@ -46,7 +46,7 @@
             // 
             this.panel1.Location = new System.Drawing.Point(38, 52);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1116, 366);
+            this.panel1.Size = new System.Drawing.Size(1100, 380);
             this.panel1.TabIndex = 1;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             this.panel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseClick_1);

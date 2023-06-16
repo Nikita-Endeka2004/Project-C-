@@ -100,17 +100,16 @@ namespace Test2
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                foreach (string fileName in openFileDialog.FileNames)
-                {
-                    List<PointF> points = ReadPointsFromFile(fileName);
-                    graphs.Add(points);
-                    DrawGraph(points);
-                }
-
                 if (!isAxesDrawn)
                 {
                     DrawAxes();
                     isAxesDrawn = true;
+                }
+                foreach (string fileName in openFileDialog.FileNames)
+                {
+                        List<PointF> points = ReadPointsFromFile(fileName);
+                        graphs.Add(points);
+                        DrawGraph(points);
                 }
             }
         }
@@ -121,13 +120,19 @@ namespace Test2
             string[] lines = File.ReadAllLines(fileName);
             foreach (string line in lines)
             {
-                string[] coordinates = line.Split(':');
-                if (coordinates.Length == 2)
+                if (line == "gap")
                 {
-                    float x, y;
-                    if (float.TryParse(coordinates[0], out x) && float.TryParse(coordinates[1], out y))
+                    points.Add(new PointF(100000, 100000));
+                }
+                else {
+                    string[] coordinates = line.Split(':');
+                    if (coordinates.Length == 2)
                     {
-                        points.Add(new PointF(x, y));
+                        float x, y;
+                        if (float.TryParse(coordinates[0], out x) && float.TryParse(coordinates[1], out y))
+                        {
+                            points.Add(new PointF(x, y));
+                        }
                     }
                 }
             }
@@ -146,23 +151,31 @@ namespace Test2
                     pen.Color = selectedGraphColor; // Используем выбранный цвет для выбранного графика
                 }
                 PointF[] scaledPoints = ScalePoints(points);
-                g.DrawLines(pen, scaledPoints);
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    if (((points[i].X == 100000 && points[i].Y == 100000) || (points[i+1].X == 100000 && points[i+1].Y == 100000)))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        g.DrawLine(pen, scaledPoints[i], scaledPoints[i+1]);
+                    }
+                }
             }
         }
         private void RedrawGraphs()
         {
             panel1.Refresh(); // Очищаем панель для перерисовки графиков
             panel1.Controls.Clear();
-
+            if (isAxesDrawn)
+            {
+                DrawAxes();
+            }
             // Перерисовываем все графики
             foreach (List<PointF> points in graphs)
             {
                 DrawGraph(points);
-            }
-
-            if (isAxesDrawn)
-            {
-                DrawAxes();
             }
         }
         private PointF[] ScalePoints(List<PointF> points)
@@ -170,13 +183,15 @@ namespace Test2
             PointF[] scaledPoints = new PointF[points.Count];
             float scaleX = panel1.Width / (scale * 10);
             float scaleY = panel1.ClientSize.Height / (scale * 10);
+            float centerY = panel1.Height / 2;
+            float centerX = panel1.Width / 2;
             float xRes, yRes;
             for (int i = 0; i < points.Count; i++)
             {
                 xRes = points[i].X;
                 yRes = points[i].Y;
-                float scaledX = 20 + xRes * scaleX;
-                float scaledY = panel1.Height - 20 - yRes * scaleY;
+                float scaledX = centerX + 45 - xRes * scaleX;
+                float scaledY = centerY + 5 - yRes * scaleY;
                 scaledPoints[i] = new PointF(scaledX, scaledY);
             }
             return scaledPoints;
@@ -185,41 +200,57 @@ namespace Test2
         {
             using (Graphics g = panel1.CreateGraphics())
             {
-                Pen pen = new Pen(Color.Black);
-                Brush brush = Brushes.Black;
-                int axisPadding = 20;
-                int xAxisY = panel1.Height - axisPadding;
-                int yAxisX = axisPadding;
+                float centerX = panel1.Width / 2;
+                float centerY = panel1.Height / 2;
+                Pen pen = new Pen(Color.LightGray, 1.1f);
+                for (int i = 0; i < panel1.Height; i += 10)
+                {
+                    g.DrawLine(pen, 0, i, panel1.Width - 10, i);
+                }
+                for (int i = 0; i <= panel1.Width; i += 10)
+                {
+                    g.DrawLine(pen, i, 0, i, panel1.Height - 10);
+                }
+                Pen axisPen = new Pen(Color.Black, 2f);
+                g.DrawLine(axisPen, 0, centerY, panel1.Width - 10, centerY);
+                g.DrawLine(axisPen, centerX, 0, centerX, panel1.Height - 10);
+                for (int i = 0; i < panel1.Width -20; i += 10)
+                {
+                    g.DrawLine(axisPen, i, centerY - 3, i, centerY + 3);
+                }
 
-                // Рисуем ось ординат
-                g.DrawLine(pen, yAxisX, axisPadding, yAxisX, xAxisY);
+                for (int i = 20; i < panel1.Height; i += 10)
+                {
+                    g.DrawLine(axisPen, centerX - 3, i, centerX + 3, i);
+                }
+                Brush brush = Brushes.Black;
+                int axisPadding = -1;
+                int axisPaddingWord = 20;
+                int xAxisY = panel1.Height - axisPadding;
 
                 // Рисуем стрелку оси ординат
                 g.FillPolygon(brush, new PointF[] {
-                    new PointF(yAxisX - 5, axisPadding + 10),
-                    new PointF(yAxisX + 5, axisPadding + 10),
-                    new PointF(yAxisX, axisPadding)
+                    new PointF(centerX - 5, axisPadding + 10),
+                    new PointF(centerX + 5, axisPadding + 10),
+                    new PointF(centerX, axisPadding)
                 });
 
                 // Подписываем ось ординат
                 string yAxisLabel = "Y";
                 SizeF yAxisLabelSize = g.MeasureString(yAxisLabel, Font);
-                g.DrawString(yAxisLabel, Font, brush, new PointF(yAxisX - yAxisLabelSize.Width - 5, axisPadding + 10));
-
-                // Рисуем ось абсцисс
-                g.DrawLine(pen, yAxisX, xAxisY, panel1.Width - axisPadding, xAxisY);
+                g.DrawString(yAxisLabel, Font, brush, new PointF(centerX - yAxisLabelSize.Width + 15, axisPaddingWord - 20));
 
                 // Рисуем стрелку оси абсцисс
                 g.FillPolygon(brush, new PointF[] {
-                    new PointF(panel1.Width - axisPadding - 10, xAxisY - 5),
-                    new PointF(panel1.Width - axisPadding - 10, xAxisY + 5),
-                    new PointF(panel1.Width - axisPadding, xAxisY)
+                    new PointF(panel1.Width - axisPadding - 20, centerY - 5),
+                    new PointF(panel1.Width - axisPadding - 20, centerY + 5),
+                    new PointF(panel1.Width - axisPadding - 10, centerY)
                 });
 
                 // Подписываем ось абсцисс
                 string xAxisLabel = "X";
                 SizeF xAxisLabelSize = g.MeasureString(xAxisLabel, Font);
-                g.DrawString(xAxisLabel, Font, brush, new PointF(panel1.Width - axisPadding - xAxisLabelSize.Width - 5, xAxisY - xAxisLabelSize.Height - 5));
+                g.DrawString(xAxisLabel, Font, brush, new PointF(panel1.Width - axisPadding - xAxisLabelSize.Width - 10, centerY - 20));
             }
         }
         private void MainForm_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -237,10 +268,17 @@ namespace Test2
         private List<PointF> MoveGraph(List<PointF> points, int dx, int dy)
         {
             List<PointF> movedPoints = new List<PointF>();
-
+            PointF movedPoint = new PointF();
             foreach (PointF point in points)
             {
-                PointF movedPoint = new PointF(point.X + dx, point.Y + dy);
+                if ((point.X != 100000) && (point.Y != 100000))
+                {
+                    movedPoint = new PointF(point.X + dx, point.Y + dy);
+                }
+                else
+                {
+                    movedPoint = new PointF(point.X, point.Y);
+                }
                 movedPoints.Add(movedPoint);
             }
 

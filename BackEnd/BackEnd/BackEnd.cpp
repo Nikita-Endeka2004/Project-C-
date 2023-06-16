@@ -17,9 +17,9 @@ std::string replaceSubstring(std::string& str, const std::string& oldSubstr, con
 double myMath(double x) {
     double result = 0.0;
     if (x > 4 && x < 5) {
-        result = cos(x)* (sqrt(5 + pow(x, 4)) + ((pow(log(2 * x), 2)) / (1.2 + pow(x, 3))));
+        result = cos(x) * (sqrt(5 + pow(x, 4)) + ((pow(log(2 * x), 2)) / (1.2 + pow(x, 3))));
     }
-    else if (x>-6 && x<-1) {
+    else if (x > -6 && x < -1) {
         result = pow(x, -22) - 1;
     }
     else {
@@ -56,11 +56,16 @@ int main()
 
     // Установка локали с разделителем дробной части ","
     outputFile.imbue(std::locale(""));
-
+    std::string temp;
     // Записываем значения x и y в файл с разделителем ","
     for (size_t i = 0; i < arrX.size(); ++i) {
-        std::string temp = std::to_string(arrY[i]);
-        outputFile << std::fixed << std::setprecision(6) << arrX[i] << ":" << std::right << replaceSubstring(temp, ".", ",") << std::endl;
+        temp = std::to_string(arrY[i]);
+        if (i < arrX.size() - 1 && (arrX[i + 1] - arrX[i] > 1000 || arrY[i + 1] - arrY[i] > 1000)) {
+            outputFile << "gap" << std::endl;
+        }
+        else {
+            outputFile << std::fixed << std::setprecision(6) << arrX[i] << ":" << std::right << replaceSubstring(temp, ".", ",") << std::endl;
+        }
     }
 
     // Закрываем файл
